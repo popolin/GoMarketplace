@@ -39,14 +39,9 @@ const CartProvider: React.FC = ({ children }) => {
     loadProducts();
   }, []);
 
-  useEffect(() => {
-    // console.log('chamando async');
-    // AsyncStorage.setItem('@GoMarketplace:car', JSON.stringify(products));
-  }, [products]);
-
-  const saveAsyncStorage = useCallback(() => {
-    AsyncStorage.setItem('@GoMarketplace:car', JSON.stringify(products));
-  }, [products]);
+  const saveAsyncStorage = useCallback((prods: Product[]) => {
+    AsyncStorage.setItem('@GoMarketplace:car', JSON.stringify(prods));
+  }, []);
 
   const increment = useCallback(
     async id => {
@@ -60,20 +55,21 @@ const CartProvider: React.FC = ({ children }) => {
           quantity,
         };
         setProducts(copyProducts);
-        saveAsyncStorage();
+        saveAsyncStorage(copyProducts);
       }
     },
     [products, saveAsyncStorage],
   );
 
-  const decrement = useCallback(async id => {
-    const indexToDecrement = products.findIndex(product => product.id === id);
-    if (indexToDecrement > -1) {
-      if (products[indexToDecrement].quantity === 1) {
-        const newProducts = products.filter(procuct => procuct.id !== id);
-        setProducts(newProducts);
-        saveAsyncStorage();
-      } else {
+  const decrement = useCallback(
+    async id => {
+      const indexToDecrement = products.findIndex(product => product.id === id);
+      if (indexToDecrement > -1) {
+        // if (products[indexToDecrement].quantity === 1) {
+        //   const newProducts = products.filter(procuct => procuct.id !== id);
+        //   setProducts(newProducts);
+        //   saveAsyncStorage(newProducts);
+        // } else {
         const quantity = products[indexToDecrement].quantity - 1;
 
         const copyProducts = [...products];
@@ -82,21 +78,23 @@ const CartProvider: React.FC = ({ children }) => {
           quantity,
         };
         setProducts(copyProducts);
-        saveAsyncStorage();
+        saveAsyncStorage(copyProducts);
+        // }
       }
-    }
-  }, []);
+    },
+    [products, saveAsyncStorage],
+  );
 
   const addToCart = useCallback(
     async (product: Product) => {
       const existsProduct = products.find(prod => prod.id === product.id);
       if (existsProduct) {
         increment(existsProduct.id);
-        saveAsyncStorage();
+        // saveAsyncStorage();
       } else {
         const newCar = [...products, { ...product, quantity: 1 }];
         setProducts(newCar);
-        saveAsyncStorage();
+        saveAsyncStorage(newCar);
       }
     },
     [increment, products, saveAsyncStorage],
