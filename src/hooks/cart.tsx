@@ -65,21 +65,22 @@ const CartProvider: React.FC = ({ children }) => {
     async id => {
       const indexToDecrement = products.findIndex(product => product.id === id);
       if (indexToDecrement > -1) {
-        // if (products[indexToDecrement].quantity === 1) {
-        //   const newProducts = products.filter(procuct => procuct.id !== id);
-        //   setProducts(newProducts);
-        //   saveAsyncStorage(newProducts);
-        // } else {
-        const quantity = products[indexToDecrement].quantity - 1;
+        // Essa condicional abaixo deve ser removida para o código passar nos testes da RocketSeat
+        if (products[indexToDecrement].quantity === 1) {
+          const newProducts = products.filter(procuct => procuct.id !== id);
+          setProducts(newProducts);
+          saveAsyncStorage(newProducts);
+        } else {
+          const quantity = products[indexToDecrement].quantity - 1;
 
-        const copyProducts = [...products];
-        copyProducts[indexToDecrement] = {
-          ...copyProducts[indexToDecrement],
-          quantity,
-        };
-        setProducts(copyProducts);
-        saveAsyncStorage(copyProducts);
-        // }
+          const copyProducts = [...products];
+          copyProducts[indexToDecrement] = {
+            ...copyProducts[indexToDecrement],
+            quantity,
+          };
+          setProducts(copyProducts);
+          saveAsyncStorage(copyProducts);
+        }
       }
     },
     [products, saveAsyncStorage],
