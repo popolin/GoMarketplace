@@ -31,10 +31,7 @@ const CartProvider: React.FC = ({ children }) => {
   useEffect(() => {
     async function loadProducts(): Promise<void> {
       const currentCarS = await AsyncStorage.getItem('@GoMarketplace:car');
-      if (!currentCarS) {
-        AsyncStorage.setItem('@GoMarketplace:car', JSON.stringify([]));
-        setProducts([]);
-      } else {
+      if (currentCarS) {
         setProducts(JSON.parse(currentCarS));
       }
     }
@@ -42,64 +39,67 @@ const CartProvider: React.FC = ({ children }) => {
     loadProducts();
   }, []);
 
+  useEffect(() => {
+    // console.log('chamando async');
+    // AsyncStorage.setItem('@GoMarketplace:car', JSON.stringify(products));
+  }, [products]);
+
+  const saveAsyncStorage = useCallback(() => {
+    AsyncStorage.setItem('@GoMarketplace:car', JSON.stringify(products));
+  }, [products]);
+
+  const increment = useCallback(
+    async id => {
+      const indexToIncrement = products.findIndex(product => product.id === id);
+      if (indexToIncrement > -1) {
+        const quantity = products[indexToIncrement].quantity + 1;
+
+        const copyProducts = [...products];
+        copyProducts[indexToIncrement] = {
+          ...copyProducts[indexToIncrement],
+          quantity,
+        };
+        setProducts(copyProducts);
+        saveAsyncStorage();
+      }
+    },
+    [products, saveAsyncStorage],
+  );
+
+  const decrement = useCallback(async id => {
+    const indexToDecrement = products.findIndex(product => product.id === id);
+    if (indexToDecrement > -1) {
+      if (products[indexToDecrement].quantity === 1) {
+        const newProducts = products.filter(procuct => procuct.id !== id);
+        setProducts(newProducts);
+        saveAsyncStorage();
+      } else {
+        const quantity = products[indexToDecrement].quantity - 1;
+
+        const copyProducts = [...products];
+        copyProducts[indexToDecrement] = {
+          ...copyProducts[indexToDecrement],
+          quantity,
+        };
+        setProducts(copyProducts);
+        saveAsyncStorage();
+      }
+    }
+  }, []);
+
   const addToCart = useCallback(
     async (product: Product) => {
       const existsProduct = products.find(prod => prod.id === product.id);
       if (existsProduct) {
-        existsProduct.quantity += 1;
+        increment(existsProduct.id);
+        saveAsyncStorage();
       } else {
         const newCar = [...products, { ...product, quantity: 1 }];
         setProducts(newCar);
-        await AsyncStorage.setItem(
-          '@GoMarketplace:car',
-          JSON.stringify(newCar),
-        );
+        saveAsyncStorage();
       }
     },
-    [products],
-  );
-
-  const increment = useCallback(
-    async id => {
-      const productToIncrement = products.find(product => product.id === id);
-      if (productToIncrement) {
-        productToIncrement.quantity += 1;
-        const others = products.filter(prod => prod.id !== id);
-        const newCar = [...others, productToIncrement];
-        setProducts(newCar);
-        await AsyncStorage.setItem(
-          '@GoMarketplace:car',
-          JSON.stringify(newCar),
-        );
-      }
-    },
-    [products],
-  );
-
-  const decrement = useCallback(
-    async id => {
-      const productToDecrement = products.find(product => product.id === id);
-      if (productToDecrement) {
-        if (productToDecrement.quantity === 1) {
-          const newProducts = products.filter(procuct => procuct.id !== id);
-          setProducts(newProducts);
-          await AsyncStorage.setItem(
-            '@GoMarketplace:car',
-            JSON.stringify(newProducts),
-          );
-        } else {
-          productToDecrement.quantity -= 1;
-          const others = products.filter(prod => prod.id !== id);
-          const newCar = [...others, productToDecrement];
-          setProducts(newCar);
-          await AsyncStorage.setItem(
-            '@GoMarketplace:car',
-            JSON.stringify(newCar),
-          );
-        }
-      }
-    },
-    [products],
+    [increment, products, saveAsyncStorage],
   );
 
   const value = React.useMemo(
